@@ -1,6 +1,6 @@
 # iOS XCUITest Portfolio
 
-[![XCUITest CI](https://github.com/gustavaom7/xcuitest-portfolio/actions/workflows/xcode-tests.yml/badge.svg)](https://github.com/gustavaom7/xcuitest-portfolio/actions/workflows/xcode-tests.yml)
+[![XCUITest CI](https://github.com/gustavaom7/xcuitest-ios-automation/actions/workflows/xcode-tests.yml/badge.svg)](https://github.com/gustavaom7/xcuitest-ios-automation/actions/workflows/xcode-tests.yml)
 
 Comprehensive UI automation suite for iOS using **XCUITest** framework. Built to demonstrate professional test architecture with **Page Object Pattern**, **accessibility best practices**, and **CI/CD integration**.
 
@@ -92,7 +92,7 @@ See [CI_CD_ONLY.md](CI_CD_ONLY.md) for detailed setup.
 
 ```bash
 # Clone
-git clone https://github.com/gustavaom7/xcuitest-portfolio.git
+git clone https://github.com/gustavaom7/xcuitest-ios-automation.git
 cd xcuitest-portfolio
 
 # Edit any test file
