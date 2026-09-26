@@ -36,7 +36,7 @@ Este projeto é configurado para rodar **apenas em GitHub Actions**. Você não 
 ### 1. Clone o Repositório
 
 ```bash
-git clone https://github.com/gustavaom7/xcuitest-portfolio.git
+git clone https://github.com/gustavaom7/xcuitest-ios-automation.git
 cd xcuitest-portfolio
 ```
 
