@@ -36,8 +36,8 @@ Este projeto é configurado para rodar **apenas em GitHub Actions**. Você não 
 ### 1. Clone o Repositório
 
 ```bash
-git clone https://github.com/gustavaom7/xcuitest-portfolio.git
-cd xcuitest-portfolio
+git clone https://github.com/gustavaom7/xcuitest-ios-automation.git
+cd xcuitest-ios-automation
 ```
 
 ### 2. Edite Código (Em qualquer editor)
@@ -96,7 +96,7 @@ gh run download <RUN_ID> -n xctest-results-iPhone15-17.5
 ## Estrutura de Arquivos
 
 ```
-xcuitest-portfolio/
+xcuitest-ios-automation/
 ├── .github/workflows/
 │   └── xcode-tests.yml          # ← GitHub Actions workflow
 ├── SampleAppUITests/            # ← Code que roda em CI
