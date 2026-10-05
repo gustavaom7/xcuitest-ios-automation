@@ -18,8 +18,8 @@ xcodebuild -version
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/gustavaom7/xcuitest-portfolio.git
-cd xcuitest-portfolio
+git clone https://github.com/gustavaom7/xcuitest-ios-automation.git
+cd xcuitest-ios-automation
 ```
 
 ### 2. Open in Xcode
