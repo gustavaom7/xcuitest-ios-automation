@@ -20,6 +20,8 @@ targets:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.gustavaom7.SampleApp
         INFOPLIST_KEY_UILaunchScreen_Generation: YES
+        # The asset catalog has no app icon; a sample app does not need one.
+        ASSETCATALOG_COMPILER_APPICON_NAME: ""
         TARGETED_DEVICE_FAMILY: "1"
   SampleAppUITests:
     type: bundle.ui-testing

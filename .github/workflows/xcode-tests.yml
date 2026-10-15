@@ -31,9 +31,23 @@ jobs:
       - name: Pick an iPhone simulator
         id: sim
         run: |
-          # Use whichever iPhone the image ships with instead of pinning a model/OS that may be removed.
-          udid=$(xcrun simctl list devices available --json \
-            | python3 -c 'import json,sys; d=json.load(sys.stdin)["devices"]; print(next(x["udid"] for k in sorted(d, reverse=True) if "iOS" in k for x in d[k] if x["name"].startswith("iPhone")))')
+          # Newest iPhone whose iOS runtime this Xcode's SDK supports: the image also ships
+          # newer runtimes than the default Xcode can build for.
+          sdk=$(xcrun --sdk iphonesimulator --show-sdk-version)
+          udid=$(xcrun simctl list devices available --json | SDK="$sdk" python3 -c '
+          import json, os, re, sys
+          sdk = tuple(int(p) for p in os.environ["SDK"].split("."))
+          devices = json.load(sys.stdin)["devices"]
+          def version(key):
+              m = re.search(r"iOS-(\d+)-(\d+)", key)
+              return tuple(int(p) for p in m.groups()) if m else None
+          runtimes = sorted((v, k) for k in devices if (v := version(k)) and v <= sdk)
+          for _, key in reversed(runtimes):
+              phones = [d for d in devices[key] if d["name"].startswith("iPhone")]
+              if phones:
+                  print(phones[-1]["udid"]); break
+          ')
+          echo "SDK $sdk -> $udid"
           echo "udid=$udid" >> "$GITHUB_OUTPUT"
           xcrun simctl list devices available | grep "$udid"
 
