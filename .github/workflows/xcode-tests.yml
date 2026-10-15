@@ -1,93 +1,85 @@
 name: XCUITest CI
 
 on:
+  push:
+    branches: [ main ]
   pull_request:
     branches: [ main ]
   workflow_dispatch:
 
+concurrency:
+  group: xcuitest-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   test:
     name: XCUITest
-    runs-on: macos-latest-xlarge
-
-    strategy:
-      matrix:
-        device: ["iPhone 15"]
-        os: ["17.5"]
+    # Standard hosted runner: free for public repositories (the -xlarge runners are billed).
+    runs-on: macos-15
+    timeout-minutes: 30
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    - name: Select Xcode version
-      run: sudo xcode-select --switch /Applications/Xcode.app/Contents/Developer
+      - name: Generate the Xcode project
+        run: |
+          brew install xcodegen
+          xcodegen generate
+          xcodebuild -version
 
-    - name: List Xcode versions
-      run: |
-        xcode-select --print-path
-        xcodebuild -version
+      - name: Pick an iPhone simulator
+        id: sim
+        run: |
+          # Use whichever iPhone the image ships with instead of pinning a model/OS that may be removed.
+          udid=$(xcrun simctl list devices available --json \
+            | python3 -c 'import json,sys; d=json.load(sys.stdin)["devices"]; print(next(x["udid"] for k in sorted(d, reverse=True) if "iOS" in k for x in d[k] if x["name"].startswith("iPhone")))')
+          echo "udid=$udid" >> "$GITHUB_OUTPUT"
+          xcrun simctl list devices available | grep "$udid"
 
-    - name: Build for Testing
-      run: |
-        xcodebuild build-for-testing \
-          -scheme SampleApp \
-          -configuration Debug \
-          -destination 'platform=iOS Simulator,name=${{ matrix.device }},OS=${{ matrix.os }}'
+      - name: Build for testing
+        run: |
+          if ! xcodebuild build-for-testing \
+              -scheme SampleApp \
+              -destination "id=${{ steps.sim.outputs.udid }}" \
+              -derivedDataPath build > build.log 2>&1; then
+            grep -E "error:" build.log | head -50
+            tail -n 40 build.log
+            exit 1
+          fi
+          grep -E "warning:.*\.swift" build.log | sort -u | head -30 || true
+          tail -n 3 build.log
 
-    - name: Run XCUITests
-      run: |
-        xcodebuild test \
-          -scheme SampleApp \
-          -configuration Debug \
-          -destination 'platform=iOS Simulator,name=${{ matrix.device }},OS=${{ matrix.os }}' \
-          -resultBundlePath test-results.xcresult \
-          -resultBundleVersion 3 \
-          -verbose
+      - name: Run XCUITests
+        run: |
+          xcodebuild test-without-building \
+            -scheme SampleApp \
+            -destination "id=${{ steps.sim.outputs.udid }}" \
+            -derivedDataPath build \
+            -resultBundlePath test-results.xcresult
 
-    - name: Upload Test Results
-      if: always()
-      uses: actions/upload-artifact@v4
-      with:
-        name: xctest-results-${{ matrix.device }}-${{ matrix.os }}
-        path: test-results.xcresult
-        retention-days: 30
+      - name: Test summary
+        if: ${{ !cancelled() }}
+        run: |
+          if [ ! -d test-results.xcresult ]; then echo "No test results" >> "$GITHUB_STEP_SUMMARY"; exit 0; fi
+          xcrun xcresulttool get test-results summary --path test-results.xcresult --compact > summary.json || exit 0
+          python3 - <<'PY' >> "$GITHUB_STEP_SUMMARY"
+          import json
+          s = json.load(open("summary.json"))
+          print("## XCUITest")
+          print()
+          print("| Tests | Passed | Failed | Skipped |")
+          print("| --- | --- | --- | --- |")
+          print(f"| {s.get('totalTestCount')} | {s.get('passedTests')} | {s.get('failedTests')} | {s.get('skippedTests')} |")
+          PY
 
-    - name: Parse and Report Results
-      if: always()
-      run: |
-        # Extract pass/fail counts
-        xcrun xcresulttool get --format json test-results.xcresult > results.json || true
-        echo "Test run completed"
-        cat results.json || echo "No results JSON available"
-
-    - name: Comment PR with Results
-      if: always() && github.event_name == 'pull_request'
-      uses: actions/github-script@v7
-      with:
-        script: |
-          const fs = require('fs');
-          const testStatus = '${{ job.status }}';
-          const message = `## XCUITest Results\n\n**Status:** ${testStatus}\n\nTests ran on **${{ matrix.device }}** with **iOS ${{ matrix.os }}**\n\n[View full results](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})`;
-
-          github.rest.issues.createComment({
-            issue_number: context.issue.number,
-            owner: context.repo.owner,
-            repo: context.repo.repo,
-            body: message
-          });
-
-    - name: Generate Summary
-      if: always()
-      run: |
-        echo "## Test Execution Summary" >> $GITHUB_STEP_SUMMARY
-        echo "" >> $GITHUB_STEP_SUMMARY
-        echo "- **Device:** ${{ matrix.device }}" >> $GITHUB_STEP_SUMMARY
-        echo "- **iOS Version:** ${{ matrix.os }}" >> $GITHUB_STEP_SUMMARY
-        echo "- **Status:** ${{ job.status }}" >> $GITHUB_STEP_SUMMARY
-        echo "- **Run:** [${{ github.run_id }}](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})" >> $GITHUB_STEP_SUMMARY
-
-    - name: Cleanup
-      if: always()
-      run: |
-        rm -f results.json
-        echo "Cleanup completed"
+      - name: Upload test results
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: xcresult
+          path: |
+            test-results.xcresult
+            build.log
+          retention-days: 14
+          if-no-files-found: ignore

@@ -41,9 +41,9 @@ class LoginTests: BaseTestCase {
         // Act
         loginPage.enterPassword(TestData.ValidCredentials.password)
 
-        // Assert
+        // Assert: a secure field never exposes what was typed
         XCTAssertTrue(loginPage.passwordTextField.exists)
-        // Password fields don't expose their value for security reasons
+        XCTAssertNotEqual(loginPage.passwordTextField.value as? String, TestData.ValidCredentials.password)
     }
 
     // MARK: - Negative Tests
@@ -104,15 +104,8 @@ class LoginTests: BaseTestCase {
             password: TestData.ValidCredentials.password
         )
 
-        // Assert
-        // Should either reject with error or handle gracefully
-        if loginPage.errorMessage.exists {
-            loginPage.verifyErrorMessageDisplayed()
-        } else {
-            let homePage = HomePage(app: app)
-            // Might succeed or fail depending on validation
-            XCTAssertTrue(true)
-        }
+        // Assert: an unknown long email is rejected like any other unknown account
+        loginPage.verifyErrorMessageDisplayed(TestData.ErrorMessages.invalidCredentials)
     }
 
     func testLoginWithSpecialCharactersInPassword() {
@@ -122,18 +115,20 @@ class LoginTests: BaseTestCase {
             password: TestData.EdgeCases.specialCharPassword
         )
 
-        // Assert
-        // Should handle special characters appropriately
-        XCTAssertTrue(loginPage.emailTextField.exists)
+        // Assert: the password is compared as typed, so a near-miss is rejected
+        loginPage.verifyErrorMessageDisplayed(TestData.ErrorMessages.invalidCredentials)
     }
 
     func testRememberMeToggle() {
-        // Act
+        // Arrange
         loginPage.verifyLoginPageLoaded()
+        XCTAssertFalse(loginPage.isRememberMeOn, "Remember me should start off")
+
+        // Act
         loginPage.toggleRememberMe()
 
         // Assert
-        XCTAssertTrue(loginPage.rememberMeSwitch.exists)
+        XCTAssertTrue(loginPage.isRememberMeOn, "Remember me should be on after one tap")
     }
 
     // MARK: - UI State Tests

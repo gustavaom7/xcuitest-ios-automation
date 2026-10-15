@@ -1,0 +1,41 @@
+# XcodeGen spec. The .xcodeproj is generated from this file (`xcodegen generate`)
+# instead of being committed: a hand-edited project.pbxproj is what broke CI before.
+name: SampleApp
+options:
+  bundleIdPrefix: com.gustavaom7
+  deploymentTarget:
+    iOS: "16.0"
+settings:
+  base:
+    SWIFT_VERSION: "5.0"
+    MARKETING_VERSION: "1.0"
+    CURRENT_PROJECT_VERSION: "1"
+    GENERATE_INFOPLIST_FILE: YES
+targets:
+  SampleApp:
+    type: application
+    platform: iOS
+    sources: [SampleApp]
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.gustavaom7.SampleApp
+        INFOPLIST_KEY_UILaunchScreen_Generation: YES
+        TARGETED_DEVICE_FAMILY: "1"
+  SampleAppUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources: [SampleAppUITests]
+    dependencies:
+      - target: SampleApp
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.gustavaom7.SampleAppUITests
+        TEST_TARGET_NAME: SampleApp
+schemes:
+  SampleApp:
+    build:
+      targets:
+        SampleApp: all
+        SampleAppUITests: [test]
+    test:
+      targets: [SampleAppUITests]

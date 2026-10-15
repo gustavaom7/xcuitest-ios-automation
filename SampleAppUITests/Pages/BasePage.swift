@@ -26,7 +26,7 @@ class BasePage {
         app.staticTexts[identifier]
     }
 
-    func switch(_ identifier: String) -> XCUIElement {
+    func switchControl(_ identifier: String) -> XCUIElement {
         app.switches[identifier]
     }
 

@@ -40,15 +40,19 @@ class LoginPage: BasePage {
         loginButton.tap()
     }
 
+    var isRememberMeOn: Bool {
+        (rememberMeSwitch.value as? String) == "1"
+    }
+
     func toggleRememberMe() {
         rememberMeSwitch.tap()
     }
 
     func clearEmailField() {
-        emailTextField.tap()
-        // Select all and delete
-        app.menuItems["Select All"].tap()
-        app.keys["delete"].tap()
+        let current = emailTextField.value as? String ?? ""
+        // Tap the trailing edge so the cursor lands after the last character.
+        emailTextField.coordinate(withNormalizedOffset: CGVector(dx: 0.95, dy: 0.5)).tap()
+        emailTextField.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: current.count))
     }
 
     func login(email: String, password: String) {

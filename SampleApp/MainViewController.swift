@@ -4,6 +4,8 @@ class MainViewController: UIViewController {
 
     let emailTextField = UITextField()
     let passwordTextField = UITextField()
+    let rememberMeLabel = UILabel()
+    let rememberMeSwitch = UISwitch()
     let loginButton = UIButton(type: .system)
     let welcomeLabel = UILabel()
     let errorLabel = UILabel()
@@ -16,7 +18,7 @@ class MainViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        view.backgroundColor = .white
+        view.backgroundColor = .systemBackground
 
         if isLoggedIn {
             setupHomeScreen()
@@ -28,14 +30,29 @@ class MainViewController: UIViewController {
     func setupLoginScreen() {
         emailTextField.accessibilityIdentifier = "loginEmailTextField"
         emailTextField.placeholder = "Email"
+        emailTextField.text = ""
         emailTextField.borderStyle = .roundedRect
+        emailTextField.autocapitalizationType = .none
+        emailTextField.autocorrectionType = .no
+        emailTextField.keyboardType = .emailAddress
         emailTextField.translatesAutoresizingMaskIntoConstraints = false
 
         passwordTextField.accessibilityIdentifier = "loginPasswordTextField"
         passwordTextField.placeholder = "Password"
+        passwordTextField.text = ""
         passwordTextField.borderStyle = .roundedRect
         passwordTextField.isSecureTextEntry = true
+        // A retry starts from an empty password instead of appending to the old one.
+        passwordTextField.clearsOnBeginEditing = true
         passwordTextField.translatesAutoresizingMaskIntoConstraints = false
+
+        rememberMeLabel.text = "Remember me"
+        rememberMeLabel.translatesAutoresizingMaskIntoConstraints = false
+
+        rememberMeSwitch.accessibilityIdentifier = "loginRememberMeSwitch"
+        rememberMeSwitch.accessibilityLabel = "Remember me"
+        rememberMeSwitch.isOn = false
+        rememberMeSwitch.translatesAutoresizingMaskIntoConstraints = false
 
         loginButton.accessibilityIdentifier = "loginSubmitButton"
         loginButton.setTitle("Login", for: .normal)
@@ -43,28 +60,36 @@ class MainViewController: UIViewController {
         loginButton.addTarget(self, action: #selector(handleLogin), for: .touchUpInside)
 
         errorLabel.accessibilityIdentifier = "loginErrorMessage"
-        errorLabel.textColor = .red
+        errorLabel.textColor = .systemRed
         errorLabel.translatesAutoresizingMaskIntoConstraints = false
         errorLabel.isHidden = true
 
         view.addSubview(emailTextField)
         view.addSubview(passwordTextField)
+        view.addSubview(rememberMeLabel)
+        view.addSubview(rememberMeSwitch)
         view.addSubview(loginButton)
         view.addSubview(errorLabel)
 
         NSLayoutConstraint.activate([
             emailTextField.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            emailTextField.centerYAnchor.constraint(equalTo: view.centerYAnchor, constant: -60),
-            emailTextField.widthAnchor.constraint(equalToConstant: 200),
+            emailTextField.centerYAnchor.constraint(equalTo: view.centerYAnchor, constant: -100),
+            emailTextField.widthAnchor.constraint(equalToConstant: 260),
             emailTextField.heightAnchor.constraint(equalToConstant: 40),
 
             passwordTextField.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            passwordTextField.centerYAnchor.constraint(equalTo: view.centerYAnchor),
-            passwordTextField.widthAnchor.constraint(equalToConstant: 200),
+            passwordTextField.topAnchor.constraint(equalTo: emailTextField.bottomAnchor, constant: 16),
+            passwordTextField.widthAnchor.constraint(equalToConstant: 260),
             passwordTextField.heightAnchor.constraint(equalToConstant: 40),
 
+            rememberMeLabel.leadingAnchor.constraint(equalTo: passwordTextField.leadingAnchor),
+            rememberMeLabel.centerYAnchor.constraint(equalTo: rememberMeSwitch.centerYAnchor),
+
+            rememberMeSwitch.trailingAnchor.constraint(equalTo: passwordTextField.trailingAnchor),
+            rememberMeSwitch.topAnchor.constraint(equalTo: passwordTextField.bottomAnchor, constant: 16),
+
             loginButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            loginButton.centerYAnchor.constraint(equalTo: view.centerYAnchor, constant: 60),
+            loginButton.topAnchor.constraint(equalTo: rememberMeSwitch.bottomAnchor, constant: 24),
 
             errorLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             errorLabel.topAnchor.constraint(equalTo: loginButton.bottomAnchor, constant: 10),
@@ -88,6 +113,7 @@ class MainViewController: UIViewController {
         settingsButton.accessibilityIdentifier = "homeSettingsButton"
         settingsButton.setTitle("Settings", for: .normal)
         settingsButton.translatesAutoresizingMaskIntoConstraints = false
+        settingsButton.addTarget(self, action: #selector(handleSettings), for: .touchUpInside)
 
         view.addSubview(welcomeLabel)
         view.addSubview(userNameLabel)
@@ -110,10 +136,15 @@ class MainViewController: UIViewController {
     }
 
     @objc func handleLogin() {
-        guard let email = emailTextField.text, !email.isEmpty,
-              let password = passwordTextField.text, !password.isEmpty else {
-            errorLabel.text = "Email and password required"
-            errorLabel.isHidden = false
+        let email = emailTextField.text ?? ""
+        let password = passwordTextField.text ?? ""
+
+        if email.isEmpty {
+            showError("Email is required")
+            return
+        }
+        if password.isEmpty {
+            showError("Password is required")
             return
         }
 
@@ -122,8 +153,7 @@ class MainViewController: UIViewController {
             view.subviews.forEach { $0.removeFromSuperview() }
             setupHomeScreen()
         } else {
-            errorLabel.text = "Invalid email or password"
-            errorLabel.isHidden = false
+            showError("Invalid email or password")
         }
     }
 
@@ -131,5 +161,16 @@ class MainViewController: UIViewController {
         isLoggedIn = false
         view.subviews.forEach { $0.removeFromSuperview() }
         setupLoginScreen()
+    }
+
+    @objc func handleSettings() {
+        let settings = SettingsViewController()
+        settings.modalPresentationStyle = .fullScreen
+        present(settings, animated: false)
+    }
+
+    private func showError(_ message: String) {
+        errorLabel.text = message
+        errorLabel.isHidden = false
     }
 }
