@@ -44,8 +44,10 @@ jobs:
           runtimes = sorted((v, k) for k in devices if (v := version(k)) and v <= sdk)
           for _, key in reversed(runtimes):
               phones = [d for d in devices[key] if d["name"].startswith("iPhone")]
+              # Prefer a current-size phone over the small iPhone SE.
+              phones.sort(key=lambda d: "SE" in d["name"])
               if phones:
-                  print(phones[-1]["udid"]); break
+                  print(phones[0]["udid"]); break
           ')
           echo "SDK $sdk -> $udid"
           echo "udid=$udid" >> "$GITHUB_OUTPUT"

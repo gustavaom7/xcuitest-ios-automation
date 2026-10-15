@@ -22,32 +22,6 @@ extension XCUIElement {
     }
 }
 
-extension XCUIApplication {
-
-    /// Get all text in the current view hierarchy
-    func allVisibleText() -> String {
-        var text = ""
-        for window in self.windows {
-            text += self.collectText(from: window)
-        }
-        return text
-    }
-
-    private func collectText(from element: XCUIElement) -> String {
-        var text = ""
-
-        if !element.label.isEmpty {
-            text += element.label + " "
-        }
-
-        for child in element.children {
-            text += self.collectText(from: child)
-        }
-
-        return text
-    }
-}
-
 extension XCTestCase {
 
     /// Assert element exists with custom message
