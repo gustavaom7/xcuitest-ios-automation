@@ -14,59 +14,11 @@ extension XCUIElement {
         }
     }
 
-    /// Clears text field and enters new text
-    func clearAndType(_ text: String) {
-        self.tap()
-        self.doubleTap() // Select all
-        self.typeText(text)
-    }
-
-    /// Type text with a delay between characters (useful for special inputs)
-    func typeTextSlowly(_ text: String, delayBetweenCharacters: Double = 0.05) {
-        for character in text {
-            self.typeText(String(character))
-            Thread.sleep(forTimeInterval: delayBetweenCharacters)
-        }
-    }
-
-    /// Wait for element to appear
-    func waitForExistence(timeout: TimeInterval = 5.0) -> Bool {
-        let predicate = NSPredicate(format: "exists == true")
-        let expectation = XCTNSPredicateExpectation(predicate: predicate, object: self)
-        return XCTWaiter().wait(for: [expectation], timeout: timeout) == .completed
-    }
-
     /// Wait for element to disappear
     func waitForInvisibility(timeout: TimeInterval = 5.0) -> Bool {
         let predicate = NSPredicate(format: "exists == false")
         let expectation = XCTNSPredicateExpectation(predicate: predicate, object: self)
         return XCTWaiter().wait(for: [expectation], timeout: timeout) == .completed
-    }
-}
-
-extension XCUIApplication {
-
-    /// Get all text in the current view hierarchy
-    func allVisibleText() -> String {
-        var text = ""
-        for window in self.windows {
-            text += self.collectText(from: window)
-        }
-        return text
-    }
-
-    private func collectText(from element: XCUIElement) -> String {
-        var text = ""
-
-        if !element.label.isEmpty {
-            text += element.label + " "
-        }
-
-        for child in element.children {
-            text += self.collectText(from: child)
-        }
-
-        return text
     }
 }
 

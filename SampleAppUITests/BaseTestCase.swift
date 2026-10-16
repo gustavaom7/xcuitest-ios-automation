@@ -7,20 +7,12 @@ class BaseTestCase: XCTestCase {
     override func setUpWithError() throws {
         try super.setUpWithError()
 
-        // Continue after failure to collect more diagnostics
+        // Stop at the first failure: later steps depend on earlier ones
         continueAfterFailure = false
 
         // Launch app fresh for each test
         app = XCUIApplication()
-
-        // Set launch arguments/environment
-        app.launchArguments = ["-com.apple.CoreData.Logging.stderr", "1"]
-        app.launchEnvironment = ["isTestMode": "true"]
-
         app.launch()
-
-        // Wait for app to stabilize
-        Thread.sleep(forTimeInterval: 0.5)
     }
 
     override func tearDownWithError() throws {

@@ -1,221 +1,61 @@
 # iOS XCUITest Portfolio
 
-[![XCUITest CI](https://github.com/gustavaom7/xcuitest-ios-automation/actions/workflows/xcode-tests.yml/badge.svg)](https://github.com/gustavaom7/xcuitest-ios-automation/actions/workflows/xcode-tests.yml)
+[![XCUITest CI](https://github.com/gustavaom7/xcuitest-ios-automation/actions/workflows/xcode-tests.yml/badge.svg?branch=main)](https://github.com/gustavaom7/xcuitest-ios-automation/actions/workflows/xcode-tests.yml)
 
-Comprehensive UI automation suite for iOS using **XCUITest** framework. Built to demonstrate professional test architecture with **Page Object Pattern**, **accessibility best practices**, and **CI/CD integration**.
+Native iOS UI tests in **Swift + XCUITest** against a small UIKit sample app that ships in this repo, with the Page Object pattern and CI on a GitHub-hosted macOS runner.
 
-> This project is a portfolio artifact showcasing iOS automation expertise aligned with modern QA practices and Swift best practices. Tests run in GitHub Actions — no Xcode installation required locally.
+> Portfolio project. The app is deliberately small (login, home, settings): the point is the test code and the pipeline. For a real app on Android and iOS, see the [Appium repo](https://github.com/gustavaom7/appium-mobile-e2e-framework).
 
-## Why this project
+## What's here
 
-Built to address iOS QA automation requirements:
+| | Where |
+|---|---|
+| Sample app (UIKit, programmatic UI, accessibility identifiers on every control) | `SampleApp/` |
+| Page Objects: `LoginPage`, `HomePage`, `SettingsPage` on a shared `BasePage` | `SampleAppUITests/Pages/` |
+| 19 UI tests: login (positive, negative, edge cases, UI state) and navigation | `SampleAppUITests/Tests/` |
+| One source of truth for accessibility identifiers | `SampleAppUITests/Utils/Accessible.swift` |
+| Xcode project generated from a spec, not committed | `project.yml` (XcodeGen) |
+| CI: build for testing, run on an available iPhone simulator, pass/fail table in the job summary, `.xcresult` artifact | `.github/workflows/xcode-tests.yml` |
 
-| Skill | Where in this repo | Status |
-|---|---|---|
-| Demonstrable knowledge in Swift | `SampleAppUITests/Pages/` + `SampleAppUITests/Tests/` | ✅ |
-| XCUITest framework proficiency | Full test suite with best practices | ✅ |
-| Page Object Pattern architecture | `BaseTestCase.swift` + `Pages/` structure | ✅ |
-| Custom XCTest extensions & utilities | `Utils/XCTestExtensions.swift` | ✅ |
-| Accessibility & identifiers usage | `Accessible.swift` identifiers throughout | ✅ |
-| CI/CD integration (GitHub Actions) | `.github/workflows/xcode-tests.yml` | ✅ |
-
-## Stack
-
-- **Language**: Swift 5.9+
-- **Testing Framework**: XCUITest (native iOS)
-- **Test Pattern**: Page Object Model
-- **CI/CD**: GitHub Actions + xcodebuild
-- **Architecture**: Modular, reusable base classes
-
-## Project Structure
+## Project structure
 
 ```
-xcuitest-ios-automation/
-├── README.md
-├── SETUP.md                              # Local setup guide
-├── SampleApp.xcodeproj/                  # Sample iOS app (test target)
-│   └── SampleApp/
-│       ├── AppDelegate.swift
-│       ├── MainViewController.swift
-│       └── Resources/
-│           └── Assets.xcassets/
-│
-├── SampleAppUITests/                     # XCUITest test target
-│   ├── BaseTestCase.swift                # Shared setup/teardown, waits
-│   ├── Pages/                            # Page Object Pattern
-│   │   ├── BasePage.swift
-│   │   ├── LoginPage.swift
-│   │   ├── HomePage.swift
-│   │   └── SettingsPage.swift
-│   ├── Tests/
-│   │   ├── LoginTests.swift
-│   │   ├── NavigationTests.swift
-│   │   ├── FormValidationTests.swift
-│   │   └── AccessibilityTests.swift
-│   ├── Utils/
-│   │   ├── XCTestExtensions.swift        # Custom assertions
-│   │   ├── Accessible.swift              # Accessibility identifiers
-│   │   ├── TestData.swift                # Mock data
-│   │   └── WaitHelpers.swift             # Synchronization utilities
-│   └── Resources/
-│       └── Localizable.strings           # Test localization
-│
-├── .github/workflows/
-│   └── xcode-tests.yml                   # CI/CD pipeline
-│
-├── docs/
-│   ├── SETUP.md                          # Installation & configuration
-│   ├── PAGE_OBJECTS.md                   # Architecture pattern
-│   ├── ACCESSIBILITY.md                  # iOS accessibility best practices
-│   ├── ASYNC_HANDLING.md                 # Wait strategies
-│   └── CI_CD.md                          # GitHub Actions workflow
-│
-└── .gitignore
+project.yml                  XcodeGen spec (app + UI test target, shared scheme)
+SampleApp/                   AppDelegate, MainViewController (login/home), SettingsViewController
+SampleAppUITests/
+  BaseTestCase.swift         fresh launch per test, wait helpers
+  Pages/                     BasePage, LoginPage, HomePage, SettingsPage
+  Tests/                     LoginTests (13), NavigationTests (6)
+  Utils/                     Accessible (identifiers), TestData, XCTest extensions
+docs/                        Page Objects, accessibility identifiers, async handling
 ```
 
-## Quick Start
+## Running locally
 
-### ⚡ CI/CD Only (No Xcode Required)
-
-This project runs tests **exclusively in GitHub Actions** (cloud). You don't need Xcode installed locally.
-
-**Workflow:**
-1. Clone repository
-2. Edit code in any editor (VSCode, Vim, etc.)
-3. Commit & push to GitHub
-4. GitHub Actions runs tests automatically
-5. View results in Actions tab
-
-See [CI_CD_ONLY.md](CI_CD_ONLY.md) for detailed setup.
-
-### Quick Push
+Requires macOS with Xcode and [XcodeGen](https://github.com/yonaskolb/XcodeGen).
 
 ```bash
-# Clone
-git clone https://github.com/gustavaom7/xcuitest-ios-automation.git
-cd xcuitest-ios-automation
-
-# Edit any test file
-# (VSCode, Sublime, Vim, etc.)
-
-# Commit & push
-git add .
-git commit -m "Update tests"
-git push origin main
-
-# View results
-# → GitHub Actions tab → See test status
+brew install xcodegen
+xcodegen generate                 # writes SampleApp.xcodeproj (git-ignored)
+open SampleApp.xcodeproj          # then ⌘U
+# or from the command line:
+xcodebuild test -scheme SampleApp -destination 'platform=iOS Simulator,name=iPhone 16'
 ```
 
-### (Optional) Local Testing with Xcode
+Use any iPhone simulator installed with your Xcode.
 
-If you have Xcode installed:
+## CI
 
-```bash
-# Open in Xcode
-open SampleApp.xcodeproj
+Runs on push to `main`, on pull requests and on demand, on the standard `macos-15` runner (free for public repositories). It generates the project, picks the newest iPhone simulator the installed Xcode can target, builds for testing, runs the tests and uploads the `.xcresult`. The 19 tests take about 16 minutes on the hosted simulator, the whole job about 20.
 
-# Run all tests (⌘U)
-# Or: xcodebuild test -scheme SampleApp
-```
+## Design notes
 
-## Key Features
+- **Accessibility identifiers, not labels**, so tests survive copy changes. The app and `Accessible.swift` share the same strings.
+- **No fixed sleeps.** Page Objects wait on element existence with `XCTNSPredicateExpectation`.
+- **Generated project.** An earlier hand-edited `project.pbxproj` was rejected by Xcode ("The project is damaged"); generating it from `project.yml` keeps the repo reviewable and the build reproducible.
 
-### 🏗️ Page Object Pattern
+## Not covered yet
 
-Clean separation of test logic from UI interaction:
-
-```swift
-// ✅ Bad: Direct XCUIElement interaction in tests
-func testLogin() {
-    app.textFields["email"].typeText("user@example.com")
-    app.secureTextFields["password"].typeText("pass123")
-    app.buttons["Login"].tap()
-}
-
-// ✅ Good: Page Object encapsulation
-let loginPage = LoginPage(app: app)
-loginPage.login(email: "user@example.com", password: "pass123")
-loginPage.verifyWelcomeMessage()
-```
-
-### ⏱️ Smart Wait Strategies
-
-Handles asynchronous UI updates without flaky delays:
-
-```swift
-// Custom waits with meaningful timeouts
-loginPage.waitForElement(app.staticTexts["Welcome"], timeout: 5.0)
-
-// Optional elements that may/may not appear
-app.buttons["Skip Tutorial"].tapIfExists()
-```
-
-### ♿ Accessibility-First
-
-Uses accessibility identifiers for robustness:
-
-```swift
-// Accessible.swift defines all identifiers
-textField(Accessible.Login.emailField).typeText(email)
-button(Accessible.Login.submitButton).tap()
-```
-
-### 🧪 Comprehensive Test Coverage
-
-- **Functional Tests**: Login, navigation, data entry
-- **Negative Tests**: Invalid inputs, error messages
-- **Accessibility Tests**: VoiceOver compatibility
-- **State Tests**: App state transitions
-
-### 🔄 CI/CD Ready
-
-GitHub Actions workflow runs on:
-- Every push/PR
-- Daily schedule
-- Manual trigger
-
-Generates test reports and uploads artifacts.
-
-## Documentation
-
-- **[CI_CD_ONLY.md](CI_CD_ONLY.md)** - How to work without Xcode (cloud testing)
-- **[SETUP.md](docs/SETUP.md)** - Local environment setup (optional, with Xcode)
-- **[PAGE_OBJECTS.md](docs/PAGE_OBJECTS.md)** - Architecture & patterns
-- **[ACCESSIBILITY.md](docs/ACCESSIBILITY.md)** - iOS a11y best practices
-- **[ASYNC_HANDLING.md](docs/ASYNC_HANDLING.md)** - Synchronization strategies
-- **[CI_CD.md](docs/CI_CD.md)** - GitHub Actions workflow details
-
-## Test Results
-
-All tests designed to run reliably on iOS Simulator (iPhone 15, iOS 17.5+).
-
-**Expected outcome:**
-- ✅ 3+ passing test classes
-- ✅ 15+ individual test cases
-- ✅ ~3-5 seconds total runtime (simulator)
-- ✅ Zero flaky assertions
-
-## Next Steps (Portfolio Enhancements)
-
-- [ ] Video recording on test failure
-- [ ] Screenshot comparison for visual regression
-- [ ] Performance profiling (XCMetrics)
-- [ ] Custom test runner with retry logic
-- [ ] Jira/Linear integration for failed tests
-- [ ] Support for real device testing (CI agent)
-
-## Requirements
-
-- Xcode 14.0+
-- Swift 5.9+
-- iOS 16.0+ (simulator or device)
-- macOS 13.0+ (for running tests locally)
-
-## License
-
-MIT
-
----
-
-**Questions?** Check the [docs/](docs/) folder or open an issue.
+- Real devices or a device cloud
+- Screenshot comparison, video on failure
+- Network stubbing (the sample app has no backend)
